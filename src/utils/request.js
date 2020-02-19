@@ -3,9 +3,11 @@ import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 
+const qs = require('querystring')
+
 // create an axios instance
 const service = axios.create({
-  baseURL: 'http://192.168.38.142:8001/', // url = base url + request url
+  baseURL: 'http://127.0.0.1:8000/', // url = base url + request url
   // withCredentials: true, // send cookies when cross-domain requests
   timeout: 5000 // request timeout
 })
@@ -21,10 +23,25 @@ service.interceptors.request.use(
       // please modify it according to the actual situation
       config.headers['X-Token'] = getToken()
     }
+    if (config.method.toLowerCase() === 'get') {
+      config.params = config.data
+    } else if (config.method.toLowerCase() === 'post') {
+      console.log('kkkk')
+      if (config.jsonData) {
+        console.log('json--------')
+        config.headers['Content-Type'] = 'application/json;charset=UTF-8'
+        config.data = JSON.stringify(config.data)
+      } else {
+        console.log('form ========')
+        config.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
+        config.data = qs.stringify(config.data)
+      }
+    }
     return config
   },
   error => {
     // do something with request error
+    console.log('request errror 0000')
     console.log(error) // for debug
     return Promise.reject(error)
   }
@@ -45,9 +62,13 @@ service.interceptors.response.use(
   response => {
     const res = response.data
     // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 20000) {
+    console.log('894789')
+    console.log(res)
+    console.log(res.status)
+    if (res.status !== 1) {
+      console.log(res.code)
       Message({
-        message: res.message || 'Error',
+        message: res.message || 'Error111',
         type: 'error',
         duration: 5 * 1000
       })
@@ -68,7 +89,7 @@ service.interceptors.response.use(
       }
       return Promise.reject(new Error(res.message || 'Error'))
     } else {
-      console.log(res)
+      console.log('kk888')
       return res
     }
   },
